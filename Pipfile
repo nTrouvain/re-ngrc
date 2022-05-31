@@ -8,6 +8,7 @@ numpy = "*"
 reservoirpy = "==0.3.5"
 scipy = "==1.4.1"
 matplotlib = "*"
+jupyter = "*"
 
 [dev-packages]
 
