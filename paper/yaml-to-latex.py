@@ -2,10 +2,11 @@
 # ReScience yaml to latex converter
 # Released under the BSD two-clauses licence
 
+
 def generate_latex_metadata(filename, article):
 
     abstract = article.abstract.replace("&", "\&")
-    
+
     content = (
         "% DO NOT EDIT - automatically generated from {filename}\n\n"
         "\\def \\codeURL{{{_.code.url}}}\n"
@@ -47,7 +48,8 @@ def generate_latex_metadata(filename, article):
         "\\def \\authorsSHORT{{{_.authors_short}}}\n"
         "\\title{{\\articleTITLE}}\n"
         "\\date{{}}\n"
-        "".format(filename=filename, _=article, abstract=abstract))
+        "".format(filename=filename, _=article, abstract=abstract)
+    )
 
     for author in article.authors:
         affiliations = ",".join(author.affiliations)
@@ -60,32 +62,43 @@ def generate_latex_metadata(filename, article):
             content += "\\affil[{_.code}]{{{_.name}, {_.address}}}\n".format(_=a)
         else:
             content += "\\affil[{_.code}]{{{_.name}}}\n".format(_=a)
-                
+
     return content
 
 
-
 # -----------------------------------------------------------------------------
-if __name__ == '__main__':
+if __name__ == "__main__":
     import locale
     import argparse
     from article import Article
 
     # Set to a UTF-8 locale - any non-ascii characters in the metadata in metadata.yaml should be in UTF-8
-    locale.setlocale(locale.LC_ALL,'en_US.UTF-8')
+    locale.setlocale(locale.LC_ALL, "en_US.UTF-8")
 
-    parser = argparse.ArgumentParser(description='YAML to latex converter.')
-    parser.add_argument('--input', '-i', dest='filename_in', action='store',
-                        default="metadata.yaml", help='input YAML file')
-    parser.add_argument('--output', "-o", dest='filename_out', action='store',
-                        default="article-metadata.tex", help='output latex file')
+    parser = argparse.ArgumentParser(description="YAML to latex converter.")
+    parser.add_argument(
+        "--input",
+        "-i",
+        dest="filename_in",
+        action="store",
+        default="metadata.yaml",
+        help="input YAML file",
+    )
+    parser.add_argument(
+        "--output",
+        "-o",
+        dest="filename_out",
+        action="store",
+        default="article-metadata.tex",
+        help="output latex file",
+    )
     args = parser.parse_args()
 
-    filename_in  = args.filename_in
+    filename_in = args.filename_in
     filename_out = args.filename_out
 
     # print("Generating latex definitions ({1}) from {0}".format(filename_in, filename_out))
-    
+
     with open(filename_in, "r") as file:
         article = Article(file.read())
 

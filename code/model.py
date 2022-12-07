@@ -19,8 +19,10 @@ import itertools as it
 import numpy as np
 import scipy.linalg
 
+from numpy.testing import assert_array_equal
 
-def nvar(X, k, s, p, window=None, transients=0):
+
+def nvar(X, k, s, p, window=None):
     """Apply Non-linear Vecror Autoregressive model (NVAR) to timeseries.
 
     Parameters
@@ -69,8 +71,10 @@ def nvar(X, k, s, p, window=None, transients=0):
         window = np.zeros((win_dim, n_dim))
     else:
         if window.shape != (win_dim, n_dim):
-            raise ValueError(f"window must be of shape ({win_dim}, {n_dim}) "
-                             f"but is of shape {window.shape}.")
+            raise ValueError(
+                f"window must be of shape ({win_dim}, {n_dim}) "
+                f"but is of shape {window.shape}."
+            )
 
     # Linear features and non-linear features vectors.
     lin_features = np.zeros((n_steps, lin_dim))
@@ -86,11 +90,10 @@ def nvar(X, k, s, p, window=None, transients=0):
         lin_features[i, :] = lin_feat
         nlin_features[i, :] = nlin_feat
 
-    return lin_features[transients:], nlin_features[transients:], window
+    return lin_features, nlin_features, window
 
 
-def tikhonov_regression(lin_features, nlin_features,
-                        target, alpha, transients, bias):
+def tikhonov_regression(lin_features, nlin_features, target, alpha, transients, bias):
     """Performs Tikhonov linear regression (with L2 regularization) between
     NVAR features and a target signal to create a readout weight matrix.
 
@@ -182,34 +185,47 @@ def predict(Wout, lin_features, nlin_features):
 # ==========
 if __name__ == "__main__":
     X = np.arange(10).reshape(-1, 1)
-    lin_feat, nlin_feat = nvar(X, k=3, s=3, p=3)
+    lin_feat, nlin_feat, _ = nvar(X, k=3, s=3, p=3)
 
-    assert np.all(lin_feat == np.array([[0, 0, 0],
-                                        [0, 0, 1],
-                                        [0, 0, 2],
-                                        [0, 0, 3],
-                                        [0, 1, 4],
-                                        [0, 2, 5],
-                                        [0, 3, 6],
-                                        [1, 4, 7],
-                                        [2, 5, 8],
-                                        [3, 6, 9]]))
+    assert_array_equal(
+        lin_feat,
+        np.array(
+            [
+                [0, 0, 0],
+                [0, 0, 1],
+                [0, 0, 2],
+                [0, 0, 3],
+                [0, 1, 4],
+                [0, 2, 5],
+                [0, 3, 6],
+                [1, 4, 7],
+                [2, 5, 8],
+                [3, 6, 9],
+            ]
+        )
+    )
 
-    assert np.all(
-        nlin_feat == np.array([[0,  0,  0,  0,   0,   0,   0,   0,   0,   0  ],
-                               [0,  0,  0,  0,   0,   0,   0,   0,   0,   1  ],
-                               [0,  0,  0,  0,   0,   0,   0,   0,   0,   8  ],
-                               [0,  0,  0,  0,   0,   0,   0,   0,   0,   27 ],
-                               [0,  0,  0,  0,   0,   0,   1,   4,   16,  64 ],
-                               [0,  0,  0,  0,   0,   0,   8,   20,  50,  125],
-                               [0,  0,  0,  0,   0,   0,   27,  54,  108, 216],
-                               [1,  4,  7,  16,  28,  49,  64,  112, 196, 343],
-                               [8,  20, 32, 50,  80,  128, 125, 200, 320, 512],
-                               [27, 54, 81, 108, 162, 243, 216, 324, 486, 729]]
-                              ))
+    assert_array_equal(
+        nlin_feat,
+        np.array(
+            [
+                [  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,],
+                [  0,   0,   0,   0,   0,   0,   0,   0,   0,   1,],
+                [  0,   0,   0,   0,   0,   0,   0,   0,   0,   8,],
+                [  0,   0,   0,   0,   0,   0,   0,   0,   0,  27,],
+                [  0,   0,   0,   0,   0,   0,   1,   4,  16,  64,],
+                [  0,   0,   0,   0,   0,   0,   8,  20,  50, 125,],
+                [  0,   0,   0,   0,   0,   0,  27,  54, 108, 216,],
+                [  1,   4,   7,  16,  28,  49,  64, 112, 196, 343,],
+                [  8,  20,  32,  50,  80, 128, 125, 200, 320, 512,],
+                [ 27,  54,  81, 108, 162, 243, 216, 324, 486, 729,],
+            ]
+        )
+    )
 
-    Wout = tikhonov_regression(lin_feat, nlin_feat, X, transients=3,
-                               alpha=1e-6, bias=True)
+    Wout = tikhonov_regression(
+        lin_feat, nlin_feat, X, transients=3, alpha=1e-6, bias=True
+    )
 
     lin_dim = lin_feat.shape[1]
     nlin_dim = nlin_feat.shape[1]

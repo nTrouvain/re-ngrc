@@ -18,8 +18,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-from reservoirpy.datasets import doublescroll
-from reservoirpy.observables import nrmse
+from data import doublescroll
+from metrics import nrmse
 
 from model import nvar, tikhonov_regression, predict
 
@@ -34,18 +34,18 @@ s = 1
 # Monomials order
 p = 3
 # Regularization parameter (from code)
-alpha = 1.e-3
+alpha = 1.0e-3
 # Add constant term
 bias = False
 
 # Time step duration (in time unit)
 dt = 0.25
 # Training time (in time unit)
-train_time = 100.
+train_time = 100.0
 # Testing time (idem)
-test_time = 800.
+test_time = 800.0
 # Transient time (idem): should always be > k * s
-transients = 1.
+transients = 1.0
 
 # Initial conditions of Lorenz equations (found in code)
 x0 = [0.37926545, 0.058339, -0.08167691]
@@ -55,19 +55,13 @@ solve_method = "RK23"
 lyap_time = 7.81
 
 # Discretization
-train_steps  = round(train_time / dt)
-test_steps   = round(test_time  / dt)
-trans_steps  = round(transients / dt)
-lyap_steps   = round(lyap_time  / dt)
+train_steps = round(train_time / dt)
+test_steps = round(test_time / dt)
+trans_steps = round(transients / dt)
+lyap_steps = round(lyap_time / dt)
 
 parameters = {
-    "nvar": {
-        "k": k,
-        "p": p,
-        "s": s,
-        "alpha": alpha,
-        "bias": bias
-        },
+    "nvar": {"k": k, "p": p, "s": s, "alpha": alpha, "bias": bias},
     "data": {
         "attractor": "lorenz",
         "dt": dt,
@@ -76,9 +70,9 @@ parameters = {
         "transients": transients,
         "doublescroll_x0": x0,
         "doublescroll_runge_kutta": solve_method,
-        "doublescroll_lyapunov_time": lyap_time
-        }
-    }
+        "doublescroll_lyapunov_time": lyap_time,
+    },
+}
 
 if __name__ == "__main__":
 
@@ -91,11 +85,11 @@ if __name__ == "__main__":
 
     Xvar = X[:, 0].var() + X[:, 1].var() + X[:, 2].var()
 
-    X_train = X[:train_steps+trans_steps]
-    X_test  = X[train_steps+trans_steps:]
+    X_train = X[: train_steps + trans_steps]
+    X_test = X[train_steps + trans_steps :]
 
-    dX_train = X[1:train_steps+trans_steps+1] - X[:train_steps+trans_steps]
-    dX_test  = X[train_steps+trans_steps+1:] - X[train_steps+trans_steps:-1]
+    dX_train = X[1 : train_steps + trans_steps + 1] - X[: train_steps + trans_steps]
+    dX_test = X[train_steps + trans_steps + 1 :] - X[train_steps + trans_steps : -1]
 
     dX_mean, dX_std = dX_train.mean(), dX_train.std()
 
@@ -104,8 +98,14 @@ if __name__ == "__main__":
     # ========
 
     lin_features, nlin_features, window = nvar(X_train, k=k, s=s, p=p)
-    Wout = tikhonov_regression(lin_features, nlin_features, dX_train,
-                               alpha=alpha, transients=trans_steps, bias=bias)
+    Wout = tikhonov_regression(
+        lin_features,
+        nlin_features,
+        dX_train,
+        alpha=alpha,
+        transients=trans_steps,
+        bias=bias,
+    )
     target_dim = Wout.shape[0]
 
     # ==========
@@ -115,16 +115,16 @@ if __name__ == "__main__":
     # On training set
     dX_pred = predict(Wout, lin_features, nlin_features)
 
-    print("Training NRMSE:",
-          nrmse(dX_train[trans_steps:], dX_pred[trans_steps:],
-                norm_value=Xvar))
+    print(
+        "Training NRMSE:",
+        nrmse(dX_train[trans_steps:], dX_pred[trans_steps:], norm_value=Xvar),
+    )
 
     # Forecasting on testing set
     u = np.atleast_2d(X_test[0, :])
     Y = np.zeros((test_steps, target_dim))
     for i in range(test_steps):
-        lin_features, nlin_features, window = nvar(u, k=k, s=s, p=p,
-                                                   window=window)
+        lin_features, nlin_features, window = nvar(u, k=k, s=s, p=p, window=window)
         u = u + predict(Wout, lin_features, nlin_features)
         Y[i, :] = u
 

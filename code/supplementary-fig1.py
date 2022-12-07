@@ -16,10 +16,11 @@ Copyright (c) 2022 Nathan Trouvain
 """
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.gridspec as gridspec
+
+from matplotlib.ticker import MultipleLocator, ScalarFormatter
 
 from data import lorenz
-from metrics import nrmse
+from metrics import nrmse, local_maxima
 from model import nvar, tikhonov_regression, predict
 
 # ==========
@@ -42,7 +43,7 @@ dt = 0.025
 # Training time (in time unit)
 train_time = 10.0
 # Testing time (idem)
-test_time = 120.0
+test_time = 1000.0
 # Transient time (idem): should always be > k * s
 transients = 5.0
 
@@ -82,14 +83,12 @@ if __name__ == "__main__":
     N = train_steps + test_steps + trans_steps
     X = lorenz(N, x0=x0, h=dt, method="RK23")
 
-    X_std = X.std()
+    total_variance = X[:, 0].var() + X[:, 1].var() + X[:, 2].var()
 
     X_train = X[: train_steps + trans_steps]
     X_test = X[train_steps + trans_steps :]
 
     dX_train = X[1 : train_steps + trans_steps + 1] - X[: train_steps + trans_steps]
-
-    dX_mean, dX_std = dX_train.mean(), dX_train.std()
 
     # ========
     # Training
@@ -110,14 +109,6 @@ if __name__ == "__main__":
     # Evaluation
     # ==========
 
-    # On training set
-    dX_pred = predict(Wout, lin_features, nlin_features)
-
-    print(
-        "Training NRMSE:",
-        nrmse(dX_train[trans_steps:], dX_pred[trans_steps:], norm_value=dX_std),
-    )
-
     # Forecasting on testing set
     u = np.atleast_2d(X_test[0, :])
     Y = np.zeros((test_steps, target_dim))
@@ -126,28 +117,55 @@ if __name__ == "__main__":
         u = u + predict(Wout, lin_features, nlin_features)
         Y[i, :] = u
 
-    print("Testing NRMSE:", nrmse(X_test, Y, norm_value=X_std))
+    print("Test NRMSE:", nrmse(X_test, Y, norm_value=total_variance))
 
-    # ====
-    # Plot
-    # ====
-    fig = plt.figure(figsize=(9, 5))
-    gs = gridspec.GridSpec(nrows=1, ncols=2)
+    # ===============
+    # Return map plot
+    # ===============
 
-    ax_gt = fig.add_subplot(gs[0, 0])
-    ax_gt.set_title("Ground truth")
-    ax_gt.set_xlabel("$x$")
-    ax_gt.set_ylabel("$z$")
-    ax_gt.set_xlim(-20, 20)
-    ax_gt.grid(False)
-    ax_gt.plot(X_test[:, 0], X_test[:, 2], lw=0.01)
+    # Local interpolated maxima of z
+    lorenz_maxima = local_maxima(X_test[:, 2])
+    model_maxima = local_maxima(Y[:, 2])
 
-    ax_pr = fig.add_subplot(gs[0, 1])
-    ax_pr.set_title("NG-RC prediction")
-    ax_pr.set_xlabel("$x$")
-    ax_pr.set_ylabel("$z$")
-    ax_pr.set_xlim(-20, 20)
-    ax_pr.grid(False)
-    ax_pr.plot(Y[:, 0], Y[:, 2], lw=0.01)
+    fig, ax = plt.subplots(1, 1, figsize=(5, 5))
+    ax.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], label="Lorenz", s=3, marker="P", alpha=0.75, color="gray")
+    ax.scatter(model_maxima[:-1], model_maxima[1:], label="NVAR", s=3, marker="P", alpha=0.25, color="orangered")
+    plt.legend(markerscale=5, frameon=False)
 
-    fig.savefig("results/fig2.pdf")
+    ax.spines["top"].set_color("None")
+    ax.spines["right"].set_color("None")
+
+    ax.xaxis.set_major_locator(MultipleLocator(10))
+    ax.xaxis.set_minor_locator(MultipleLocator(5))
+    ax.xaxis.set_minor_formatter(ScalarFormatter())
+
+    ax.yaxis.set_major_locator(MultipleLocator(10))
+    ax.yaxis.set_minor_locator(MultipleLocator(5))
+    ax.yaxis.set_minor_formatter(ScalarFormatter())
+
+    ax.tick_params(axis='both', which='major', labelsize=10)
+    ax.tick_params(axis='both', which='minor', labelsize=8)
+
+    ax.set_xlim(30, 47)
+
+    # Inset axes zoom
+
+    axins = ax.inset_axes([0.1, 0.69, 0.3, 0.3])
+    axins.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], label="Lorenz", s=3, marker="P", alpha=0.75, color="gray")
+    axins.scatter(model_maxima[:-1], model_maxima[1:], label="NVAR", s=3, marker="P", alpha=0.25, color="orangered")
+
+    # sub region from original code
+    x1, x2, y1, y2 = 34.6, 35.5, 35.7, 36.6
+    axins.set_xlim(x1, x2)
+    axins.set_ylim(y1, y2)
+
+    axins.xaxis.set_major_locator(MultipleLocator(0.4))
+    axins.yaxis.set_major_locator(MultipleLocator(0.4))
+
+    axins.tick_params(axis='both', which='major', labelsize=6)
+
+    ax.indicate_inset_zoom(axins, edgecolor="black")
+
+    plt.tight_layout()
+
+    fig.savefig("results/supplementary-fig1.pdf", bbox_inches="tight")
