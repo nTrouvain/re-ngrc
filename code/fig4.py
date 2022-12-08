@@ -1,6 +1,6 @@
 """
 =======
-fig2.py
+fig4.py
 =======
 
 Script for reproduction of Figure 4 of paper:
@@ -111,9 +111,28 @@ if __name__ == "__main__":
     # ====
     total_time = train_time + test_time
     timepoints = np.linspace(train_time, total_time, test_steps)
-    fig, ax = plt.subplots(1, 1, figsize=(9, 7))
-    ax.plot(timepoints, Z_pred_test)
-    ax.plot(timepoints, Z_test)
-    ax.plot(timepoints, np.abs(Z_test - Z_pred_test))
 
-    fig.savefig("results/fig4.pdf")
+    fig, ax = plt.subplots(1, 1, figsize=(9, 7))
+
+    ax.plot(timepoints, Z_test, label="True value", color="gray")
+    ax.plot(timepoints, Z_pred_test, label="Inferered value", color="orangered", alpha=0.7)
+
+    ax.spines["top"].set_color("None")
+    ax.spines["right"].set_color("None")
+
+    ax.set_ylabel("$z_t$")
+
+    axins = ax.inset_axes([0.0, -0.35, 1.0, 0.25], sharex=ax)
+    axins.plot(timepoints, np.abs(Z_test - Z_pred_test), label="Absolute deviation", color="gray")
+
+    axins.set_ylabel("$|z_t - \hat{z}_t|$")
+    axins.set_xlabel("Timestep")
+
+    axins.spines["top"].set_color("None")
+    axins.spines["right"].set_color("None")
+
+    fig.legend(frameon=False)
+
+    plt.tight_layout()
+
+    fig.savefig("results/fig4.pdf", bbox_inches="tight")

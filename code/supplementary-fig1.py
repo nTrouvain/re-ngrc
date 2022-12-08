@@ -1,9 +1,9 @@
 """
-=======
-fig2.py
-=======
+=====================
+supplementary-fig1.py
+=====================
 
-Script for reproduction of Figure 2 of paper:
+Script for reproduction of Supplementary Figure 1 of paper:
 
     Gauthier, D. J., Bollt, E., Griffith, A., & Barbosa, W. A. S. (2021).
     Next generation reservoir computing.

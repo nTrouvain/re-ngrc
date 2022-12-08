@@ -180,6 +180,15 @@ def predict(Wout, lin_features, nlin_features):
     return (np.dot(W, tot_features.T) + bias).T
 
 
+def forecast(init_point, steps, Wout, k, s, p, window):
+    u = np.atleast_2d(init_point)
+    Y = np.zeros((steps, init_point.shape[1]))
+    for i in range(steps):
+        lin_features, nlin_features, window = nvar(u, k=k, s=s, p=p, window=window)
+        u = u + predict(Wout, lin_features, nlin_features)
+        Y[i, :] = u
+    return Y
+
 # ==========
 # Some tests
 # ==========

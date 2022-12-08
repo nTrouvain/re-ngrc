@@ -20,7 +20,7 @@ import matplotlib.gridspec as gridspec
 
 from data import lorenz
 from metrics import nrmse
-from model import nvar, tikhonov_regression, predict
+from model import nvar, tikhonov_regression, forecast
 
 # ==========
 # Parameters
@@ -55,23 +55,9 @@ lyap_time = 1.1  # 1.104 in code
 
 # Discretization
 train_steps = round(train_time / dt)
-test_steps = round(test_time / dt)
+test_steps  = round(test_time / dt)
 trans_steps = round(transients / dt)
-lyap_steps = round(lyap_time / dt)
-
-parameters = {
-    "nvar": {"k": k, "p": p, "s": s, "alpha": alpha, "bias": bias},
-    "data": {
-        "attractor": "lorenz",
-        "dt": dt,
-        "train_time": train_time,
-        "test_time": test_time,
-        "transients": transients,
-        "lorenz_x0": x0,
-        "lorenz_runge_kutta": solve_method,
-        "lorenz_lyapunov_time": lyap_time,
-    },
-}
+lyap_steps  = round(lyap_time / dt)
 
 if __name__ == "__main__":
 
@@ -82,14 +68,12 @@ if __name__ == "__main__":
     N = train_steps + test_steps + trans_steps
     X = lorenz(N, x0=x0, h=dt, method="RK23")
 
-    X_std = X.std()
+    total_var = np.sum([X[:, i].var() for i in range(X.shape[1])])
 
     X_train = X[: train_steps + trans_steps]
     X_test = X[train_steps + trans_steps :]
 
     dX_train = X[1 : train_steps + trans_steps + 1] - X[: train_steps + trans_steps]
-
-    dX_mean, dX_std = dX_train.mean(), dX_train.std()
 
     # ========
     # Training
@@ -111,6 +95,7 @@ if __name__ == "__main__":
     # ==========
 
     # On training set
+    X_pred = forecast()
     dX_pred = predict(Wout, lin_features, nlin_features)
 
     print(

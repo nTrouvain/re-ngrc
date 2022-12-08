@@ -2,19 +2,29 @@
 \section{Introduction}
 
 Reservoir Computing (RC) is a machine learning paradigm where
-untrained recurrent neural networks called \textit{reservoirs} encode
-temporal information within a high dimensional space.
-A single layer of neuron, called the \textit{readout},
+an untrained recurrent neural network --- called the \textit{reservoir} --- encodes
+temporal information withibillingsNonlinearSystemIdentification2013n a high dimensional space.
+A single layer of neuron --- called the \textit{readout} ---
 is then trained to decode this temporal embedding in order
 to solve various tasks, from choatic timeseries prediction to pattern recognition.
 \citet{gauthier2021next} propose a novel formulation of this paradigm under
-the scope of dynamical system and autoregressive machines.
+the scope of dynamical system theory and autoregressive machines.
 The reservoir might be seen as a Non-linear Vector AutoRegressive machine (NVAR),
 combining lagged values of a multivariate timeseries
-and non-linear recombinations of these values to predict next values. The
-authors claim that this new RC formalism display similar capabilities to those
+with non-linear recombinations of these values to embed complex dynamics,
+in particular those of strange attractors.
+The authors claim that this new RC formalism display similar capabilities to those
 of its recurrent neural-networks powered counterpart. They also use this formalism
-to bridge RC theoretical background and dynamical system theory.
-In this report, we replicated all the experiments performed by \citet{gauthier2021next} 
+to bridge RC theoretical background and dynamical system theory\foot.
+In this report, we replicated all the experiments performed by \citet{gauthier2021next}
 in their paper. We also briefly describe our proposed reusable implementation
-of the NVAR within the \textit{reservoirpy} RC library \supercite{trouvain2020}.
+of the NVAR within the \texttt{reservoirpy} RC library \supercite{trouvain2020}.
+
+\section{Methods}
+
+\citet{gauthier2021next} propose to model the behaviour of chaotic attractors drawing inspiration
+from the multivariate Non-Linear Autoregression with Exogenous inputs (NARX) literature \cite{billings2013}.
+This type of modeling method paves the way to a more deeper understanding of RC efficiency using
+the historical mathematical framework of dynamical system analysis. Indeed, in another paper by \citet{bollt2021}
+\footnote{Second author of the replicated paper.}, authors clearly reformulate RC equations to demonstrate
+its direct link with NARX 
