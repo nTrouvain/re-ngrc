@@ -42,7 +42,7 @@ keywords: rescience c, reservoir computing, autoregressive models
 # Software Heritage.
 #   see https://guides.github.com/activities/citable-code/
 code:
-  - url: https://github.com/rescience-c/template
+  - url: https://github.com/ntrouvain/re-ngrc
   - doi: 
   - swh: 
 

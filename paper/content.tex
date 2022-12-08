@@ -3,7 +3,7 @@
 
 Reservoir Computing (RC) is a machine learning paradigm where
 an untrained recurrent neural network --- called the \textit{reservoir} --- encodes
-temporal information withibillingsNonlinearSystemIdentification2013n a high dimensional space.
+temporal information within a high dimensional space.
 A single layer of neuron --- called the \textit{readout} ---
 is then trained to decode this temporal embedding in order
 to solve various tasks, from choatic timeseries prediction to pattern recognition.
@@ -15,7 +15,7 @@ with non-linear recombinations of these values to embed complex dynamics,
 in particular those of strange attractors.
 The authors claim that this new RC formalism display similar capabilities to those
 of its recurrent neural-networks powered counterpart. They also use this formalism
-to bridge RC theoretical background and dynamical system theory\foot.
+to bridge RC theoretical background and dynamical system theory.
 In this report, we replicated all the experiments performed by \citet{gauthier2021next}
 in their paper. We also briefly describe our proposed reusable implementation
 of the NVAR within the \texttt{reservoirpy} RC library \supercite{trouvain2020}.
@@ -23,25 +23,36 @@ of the NVAR within the \texttt{reservoirpy} RC library \supercite{trouvain2020}.
 \section{Methods}
 
 \citet{gauthier2021next} propose to model the behaviour of chaotic attractors drawing inspiration
-from the multivariate Non-Linear Autoregression with Exogenous inputs (NARX) literature \cite{billings2013}.
+from the multivariate Non-linear Autoregression with Exogenous inputs (NARX) literature \cite{billings2013}.
 This type of modeling method paves the way to a more deeper understanding of RC efficiency using
 the historical mathematical framework of dynamical system analysis. Indeed, in another paper by \citet{bollt2021}
 \footnote{Second author of the replicated paper.}, authors clearly reformulate RC equations to demonstrate
 its direct link with NARX methods. The complete rationale behind this demonstration is out of the scope
 of this paper. Bluntly put, under certain assumptions over the non linearity of reservoir neurons,
-RC may be tantamount to a Non Linear Vector Auto-Regression method (NVAR), where non-linearty originates
-from polynomials combination of delayed inputs.
+RC may be equivalent to a Non Linear Vector Auto-Regression method (NVAR), where non-linearty originates
+from polynomial combinations of delayed inputs.
 
 In the following section, we will describe in detail the NVAR formulation proposed by the authors, our implementation
-of this method, and the different tasks used to assess its efficiency.
+of this method, and the different tasks on which NVAR efficiency was assessed.
 
 % This reformulation allows to justify the expressiveness and power of RC methods using theoretical results about Voltera decompostion under the Takens theorem.
 
 \subsection{Non Linear Vector Auto-Regression}
 
-In contrast with classical RC methods, NVAR does not rely on a random non-linear combination of the inputs to
-integrate timed information. Inputs are simply embedded in a space representing their current, delayed,
-and non linearly combined values. 
+In contrast with classical RC methods, NVAR does not rely on random non-linear combinations to
+integrate time-dependent variables. In other words, NVAR can be seen as \textit{reservoirless} 
+reservoir computing: the central piece of close-to-chaos non-linearities, usually a randomly
+connected artificial neural netword with recurrent connexions, is completely replaced 
+by an auto-regressive reformulation of the input variables themselves. 
+
+To further develop this concept, let's consider a $d$-dimensional timeseries 
+$\mathbf{X}_{i \in [0, T]} = [x_{0, i}, x_{1, i} \dots x_{d-1, i}]_{i \in [0, T]}$, of length $T$.
+Within the classic RC framework, a reservoir of randomly, reccurently connected neurons
+embed each timestep of $\mathbf{X}_i$ into a $D$-dimensional state vector $\mathbf{R}_i$
+through a linear transformation. 
+The recurrence of the neuronal connexions ensure that the state vectors $\mathbf{R}_i$ 
+form an implicit delay embedding of $\mathbf{X}_i$, allowing the reservoir state to hold 
+a possibly infinite memory of previous values of $\mathbf{X}_i$ at each time point $i$.
 
 
 \subsection{Implementation}
