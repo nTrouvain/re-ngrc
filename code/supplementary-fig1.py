@@ -128,9 +128,9 @@ if __name__ == "__main__":
     model_maxima = local_maxima(Y[:, 2])
 
     fig, ax = plt.subplots(1, 1, figsize=(5, 5))
-    ax.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], label="Lorenz", s=3, marker="P", alpha=0.75, color="gray")
-    ax.scatter(model_maxima[:-1], model_maxima[1:], label="NVAR", s=3, marker="P", alpha=0.25, color="orangered")
-    plt.legend(markerscale=5, frameon=False)
+    ax.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], label="Original Lorenz", s=3, marker="P", alpha=0.75, color="gray")
+    ax.scatter(model_maxima[:-1], model_maxima[1:], label="NVAR reconstruction", s=3, marker="P", alpha=0.25, color="orangered")
+    plt.legend(markerscale=3, frameon=False, fontsize=10)
 
     ax.spines["top"].set_color("None")
     ax.spines["right"].set_color("None")
@@ -148,11 +148,14 @@ if __name__ == "__main__":
 
     ax.set_xlim(30, 47)
 
+    ax.set_xlabel("$\mathrm{max}_{local}~~z_t$")
+    ax.set_ylabel("$\mathrm{max}_{local}~~z_{t+1}$")
+
     # Inset axes zoom
 
     axins = ax.inset_axes([0.1, 0.69, 0.3, 0.3])
-    axins.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], label="Lorenz", s=3, marker="P", alpha=0.75, color="gray")
-    axins.scatter(model_maxima[:-1], model_maxima[1:], label="NVAR", s=3, marker="P", alpha=0.25, color="orangered")
+    axins.scatter(lorenz_maxima[:-1], lorenz_maxima[1:], s=3, marker="P", alpha=0.75, color="gray")
+    axins.scatter(model_maxima[:-1], model_maxima[1:], s=3, marker="P", alpha=0.25, color="orangered")
 
     # sub region from original code
     x1, x2, y1, y2 = 34.6, 35.5, 35.7, 36.6
