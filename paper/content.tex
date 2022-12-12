@@ -1,14 +1,42 @@
 
+\newcommand{\todo}[1]{{\color{blue} TODO: #1}}
+
 \section{Introduction}
 
 Reservoir Computing (RC) is a machine learning paradigm where
-an untrained recurrent neural network --- called the \textit{reservoir} --- encodes
+an untrained recurrent neural network --- called the \emph{reservoir} --- encodes
 temporal information within a high dimensional space.
-A single layer of neuron --- called the \textit{readout} ---
+A single layer of neuron --- called the \emph{readout} ---
 is then trained to decode this temporal embedding in order
 to solve various tasks, from choatic timeseries prediction to pattern recognition.
+
+
 \citet{gauthier2021next} propose a novel formulation of this paradigm under
 the scope of dynamical system theory and autoregressive machines.
+
+%\citet{gauthier2021next} propose to model the behaviour of chaotic attractors
+Drawing inspiration from the multivariate
+Non-linear Auto-Regression with Exogenous inputs (NARX) literature \cite{billings2013},
+%This type of modeling method
+they pave the way to a more deeper understanding of RC efficiency using
+the historical mathematical framework of timeseries analysis. Indeed, in another paper by \citet{bollt2021}
+\footnote{Second author of the replicated paper.}, authors clearly reformulate RC equations to demonstrate
+its direct link with NARX methods: Under certain assumptions over the non-inearity of reservoir and readout neurons,
+RC may be equivalent to a Non Linear Vector Auto-Regression method (NVAR), where non-linearty originates
+from polynomial combinations of delayed inputs. In particular, a reservoir equiped with a purely
+linear activation function can be seen as delay-embedding machine. Its state is solely
+dependent on previous values of the input timeseries, insofar as a this neuronal state is only defined by random linear
+combinations of neurons' current input and their own previous state values. Thus, this kind of reservoir is
+akin to a Vector Auto-Regressive (VAR) machine where the value of a multivariate
+timeseries at a specific timestep is modeled as a linear combination of $k$ previous values, modulo a noise term.
+
+In addition, non-linear transformations are typically added to reservoirs in the form of activation functions,
+such as hyperbolic tangent or logistic functions. Less commonly, non-linearties can be introduced
+outside the reservoir, adding quadratic combinations of the neurons' linear state values to the state vector.
+This usually equivalently powerful yet somehow simplified formalism place
+RC in a direct lineage with the non-linear counterpart of auto-regressive methods,
+namely Non-Linear Vector Auto-Regression (NVAR).
+
 The reservoir might be seen as a Non-linear Vector AutoRegressive machine (NVAR),
 combining lagged values of a multivariate timeseries
 with non-linear recombinations of these values to embed complex dynamics,
@@ -18,19 +46,31 @@ of its recurrent neural-networks powered counterpart. They also use this formali
 to bridge RC theoretical background and dynamical system theory.
 In this report, we replicated all the experiments performed by \citet{gauthier2021next}
 in their paper. We also briefly describe our proposed reusable implementation
-of the NVAR within the \texttt{reservoirpy} RC library \supercite{trouvain2020}.
+of the NVAR within the \emph{reservoirpy} RC library \supercite{trouvain2020}.
+
 
 \section{Methods}
 
 \citet{gauthier2021next} propose to model the behaviour of chaotic attractors drawing inspiration
-from the multivariate Non-linear Autoregression with Exogenous inputs (NARX) literature \cite{billings2013}.
+from the multivariate Non-linear Auto-Regression with Exogenous inputs (NARX) literature \cite{billings2013}.
 This type of modeling method paves the way to a more deeper understanding of RC efficiency using
-the historical mathematical framework of dynamical system analysis. Indeed, in another paper by \citet{bollt2021}
+the historical mathematical framework of timeseries analysis. Indeed, in another paper by \citet{bollt2021}
 \footnote{Second author of the replicated paper.}, authors clearly reformulate RC equations to demonstrate
-its direct link with NARX methods. The complete rationale behind this demonstration is out of the scope
-of this paper. Bluntly put, under certain assumptions over the non linearity of reservoir neurons,
+its direct link with NARX methods: Under certain assumptions over the non linearity of reservoir neurons,
 RC may be equivalent to a Non Linear Vector Auto-Regression method (NVAR), where non-linearty originates
-from polynomial combinations of delayed inputs.
+from polynomial combinations of delayed inputs. In particular, a reservoir equiped with a purely
+linear activation function can be seen as delay-embedding machine. Its state is solely
+dependent on previous values of the input timeseries, insofar as a this neuronal state is only defined by random linear
+combinations of neurons' current input and their own previous state values. Thus, this kind of reservoir is
+akin to a Vector Auto-Regressive (VAR) machine where the value of a multivariate
+timeseries at a specific timestep is modeled as a linear combination of $k$ previous values, modulo a noise term.
+
+In addition, non-linear transformations are typically added to reservoirs in the form of activation functions,
+such as hyperbolic tangent or logistic functions. Less commonly, non-linearties can be introduced
+outside the reservoir, adding quadratic combinations of the neurons' linear state values to the state vector.
+This usually equivalently powerful yet somehow simplified formalism place
+RC in a direct lineage with the non-linear counterpart of auto-regressive methods,
+namely Non-Linear Vector Auto-Regression (NVAR).
 
 In the following section, we will describe in detail the NVAR formulation proposed by the authors, our implementation
 of this method, and the different tasks on which NVAR efficiency was assessed.
@@ -40,7 +80,7 @@ of this method, and the different tasks on which NVAR efficiency was assessed.
 \subsection{Non Linear Vector Auto-Regression}
 
 In contrast with classical RC methods, NVAR does not rely on random non-linear combinations to
-integrate time-dependent variables. In other words, NVAR can be seen as \textit{reservoirless} 
+integrate time-dependent variables. In other words, NVAR can be seen as \emph{reservoirless} 
 reservoir computing: the central piece of close-to-chaos non-linearities, usually a randomly
 connected artificial neural netword with recurrent connexions, is completely replaced 
 by an auto-regressive reformulation of the input variables themselves. 
@@ -54,8 +94,66 @@ The recurrence of the neuronal connexions ensure that the state vectors $\mathbf
 form an implicit delay embedding of $\mathbf{X}_i$, allowing the reservoir state to hold 
 a possibly infinite memory of previous values of $\mathbf{X}_i$ at each time point $i$.
 
+\todo{finish intro + method}
 
 \subsection{Implementation}
+
+While original code offer an easy to understand roadmap to use NVAR, it
+suffers from a lack of reusability and code efficiency. In particular, linear
+and non linear features are computed using nested for-loops, which are well-known
+to be unefficient in Python and do not allow for any tailoring of the
+non linear features order parameter $k$. On the other hand, the mathematical description
+of the NVAR hints at the possibility of a flexible implementation. Outter
+products involved in the formal definition of non linear features
+are tedious to use as is, because they imply to filter all unique numbers
+at each product step to build unique monomials. However, all unique monomials
+to any given order $k$ can be filtered in advance knowing all combinations with replacement
+of $k$ linear features among all. These combinations can be found using the Python
+built-in function \emph{itertools.combination\_with\_replacement}. Knowing all these combinations,
+non linear features can then be expressed as product of terms in all combinations.
+The major downside of this technique is the prohibitive cost of computing
+combinations with replacement when order $k$ or linear features dimension become large.
+Despite this fact, and as explained in the original paper, this should not be
+a limitation because embedding emerging from this technique are expressive
+enough for low values of $k$. Nevertheless, when the input dimension is high,
+NVAR gain in terms of computing efficiency may be overtaken by classic RC techniques.
+
+In addition, we also propose to dynamically encode inputs using a rolling window rather
+than computing all linear features in advance as done in the original code. Put together,
+all this methods allow to define a simple functional interface for the NVAR, that
+takes a single timeseries window as input and output an embedding vector.
+
+We therefore provide two reusable NVAR implementations following the methods set out above.
+The first one is a simple functional implementation written in Python 3. The code is included in the
+paper repository (located in \texttt{code/model.py}). The second one is an object-oriented
+implementation of the NVAR, integrated into the Python 3 Reservoir Computing library
+\emph{reservoirpy}\cite{trouvain2020}. Both implementations rely on Python 3's standard
+scientific stack (\emph{numpy} and \emph{scipy} libraries.)
+A summary of all exact dependencies --- including those of the original authors code
+--- is on display in table \ref{tab:dependencies}.
+
+\begin{table}[!h]
+    \centering
+    \begin{tabular}{cccc}
+    \multicolumn{1}{l}{}         & Functional   & \emph{reservoirpy}   & Original     \\ \hline
+    Python version               & Python 3.7.9 & Python 3.8.10        & Python 3.7.9 \\
+    \emph{numpy} version         & 1.20.2       & 1.21.6               & 1.20.2       \\
+    \emph{scipy} version         & 1.6.2        & 1.6.2                & 1.6.2        \\
+    \emph{reservoirpy} version   & --           & 0.3.5                & --
+    \end{tabular}
+    \caption{Summary of dependencies for all implementations.}
+    \label{tab:dependencies}
+\end{table}
+
+The original paper provide a sufficient amount of details to run our
+functional implementation in a closely similar environement to the original one.
+However, due to \emph{reservoirpy} requirements, we had to slightly addapt
+our \emph{reservoirpy} implementation dependencies. More specificaly, Python 3
+version was upgraded from 3.7 to 3.8, and \emph{numpy} version was upgraded
+from 1.20 to 1.21. These changes had no discernable impact neither on the
+code behaviour nor on its results.
+
+
 
 \subsection{Tasks description}
 
